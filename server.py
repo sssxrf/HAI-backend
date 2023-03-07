@@ -3,17 +3,17 @@ import sys
 
 from flask import Flask, redirect, url_for, request, jsonify
 
-def init_webhooks(base_url):
-    # Update inbound traffic via APIs to use the public-facing ngrok URL
-    pass
-
+# application factory. We will create all of the interfaces here
 def create_app():
+
+    # create and configure the app
     app = Flask(__name__)
 
+    # main route. This is essentially equivalent to the index.html file
     @app.route("/", methods=["GET", "POST"])
     def index():
 
-        # main webpage requested
+        # main webpage requested via typical web browser
         if request.method == "GET":
             return "<h1>The server is working! 🎉</h1>"
 
@@ -22,7 +22,11 @@ def create_app():
             data = request.get_json()
             print(data)  # hand data from the client will be printed here
 
-            return "OK"
+            # ~~~ Future AI function call here ~~~
+            # ai_result = ai_function(data)
+            ai_result = "Some AI result"
+
+            return ai_result  # send back the result to the frontend
 
         # neither get nor post
         else:
