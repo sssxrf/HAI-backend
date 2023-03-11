@@ -13,7 +13,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
-#compare distance functions
+#Euclidean distance matrix functions
 def getDistancesMatrix(handData):
     numjoints = len(handData)
     distMatrix = np.zeros([numjoints, numjoints],dtype='float')
@@ -24,7 +24,7 @@ def getDistancesMatrix(handData):
 
     return distMatrix
  
-def findError(gestureMatrix,unknownMatrix,keyPoints):
+def findError(gestureMatrix, unknownMatrix, keyPoints):
     error=0
     points = np.array(keyPoints)
     errorMatrix = np.absolute(gestureMatrix - unknownMatrix)
@@ -32,10 +32,10 @@ def findError(gestureMatrix,unknownMatrix,keyPoints):
     error = errorMatrix[indices].sum()
     return error
 
-def findGesture(unknownGesture,knownGestures,keyPoints,gestNames,tol):
+def findGesture(unknownGesture, knownGestures, keyPoints, gestNames, tol):
     errorArray=[]
     for i in range(0,len(gestNames)):
-        error=findError(knownGestures[i],unknownGesture,keyPoints)
+        error=findError(knownGestures[i], unknownGesture, keyPoints)
         errorArray.append(error)
     errorArray = np.array(errorArray)
     errorMin=np.min(errorArray)
@@ -55,7 +55,7 @@ trainCnt = 0
 train = True
 tol = 1500
 
-for i in range(0,numGest,1):
+for i in range(0, numGest, 1):
     prompt='Name of Gesture #'+str(i+1)+' '
     name=input(prompt)
     gestNames.append(name)
@@ -121,6 +121,8 @@ with mp_hands.Hands(
     if cv2.waitKey(5) & 0xFF == 27:
       break
 cap.release()
+
+
 # # For static images:
 # IMAGE_FILES = []
 # with mp_hands.Hands(
@@ -161,5 +163,3 @@ cap.release()
 #     for hand_world_landmarks in results.multi_hand_world_landmarks:
 #       mp_drawing.plot_landmarks(
 #         hand_world_landmarks, mp_hands.HAND_CONNECTIONS, azimuth=5)
-
-# For webcam input:
