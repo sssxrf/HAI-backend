@@ -1,3 +1,17 @@
-/Mp_env
+#test data
 gesturedatas/test.txt
 test.py
+
+# virtualenvs
+Mp_env/
+venv/
+env/
+
+# mac garbage
+*.DS_Store
+
+# ngrok is a tool for exposing local servers behind NATs and firewalls to the public internet over secure tunnels.
+ngrok
+
+# python garbage
+__pycache__/
