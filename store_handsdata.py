@@ -3,8 +3,8 @@ import mediapipe as mp
 import numpy as np
 
 # parameters:
-# width = 
-# height = 
+width = 540
+height = 360
 keyPoints = [0,1,4,5,9,13,17,8,12,16,20]
 allPoints = list(range(0, 21))
 
@@ -64,13 +64,15 @@ print(gestNames)
 
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,height)
 with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5) as hands:
   while cap.isOpened():
     success, image = cap.read()
-    height, width, _ = image.shape
+    # height, width, _ = image.shape
     # image = cv2.resize(image,(width, height))
     if not success:
       print("Ignoring empty camera frame.")
