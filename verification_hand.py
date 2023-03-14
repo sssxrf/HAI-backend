@@ -3,8 +3,10 @@ import mediapipe as mp
 import numpy as np
 
 # parameters:
-# width = 
-# height = 
+width = 540
+height = 360
+start_point = (120, 40)
+end_point = (420, 320)
 keyPoints = [0,1,4,5,9,13,17,8,12,16,20]
 allPoints = list(range(0, 21))
 
@@ -12,6 +14,31 @@ allPoints = list(range(0, 21))
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
+
+# read prestore gesture matrix(stored in a dictionary)
+gesture_dict = {}
+gesture_data = []
+start_flag = 1
+with open(r'D:/umich_course/2023winter/HCI-AI/Final Project/backend/HAI-backend/gesturedatas/gesture_info_abcd.txt', 'r') as fp_read:
+    for line in fp_read:
+        pos = line[:-1]
+        if len(pos) == 1:
+            if start_flag:
+                gesture_name_temp = pos
+                start_flag = 0
+                continue
+            gesture_dict[gesture_name_temp] = gesture_data
+            gesture_name_temp = pos
+            gesture_data = []
+            continue
+         
+        pos_tuple = tuple(map(int, pos.split(' ')))
+        gesture_data.append(pos_tuple)
+
+    else:
+        gesture_dict[gesture_name_temp] = gesture_data
+print('finish loading gesture data!')
+print(gesture_dict)
 
 #Euclidean distance matrix functions
 def getDistancesMatrix(handData):
@@ -32,34 +59,29 @@ def findError(gestureMatrix, unknownMatrix, keyPoints):
     error = errorMatrix[indices].sum()
     return error
 
-def findGesture(unknownGesture, knownGestures, keyPoints, gestNames, tol):
-    errorArray=[]
-    for i in range(0,len(gestNames)):
-        error=findError(knownGestures[i], unknownGesture, keyPoints)
-        errorArray.append(error)
-    errorArray = np.array(errorArray)
-    errorMin=np.min(errorArray)
-    minIndex = np.argmin(errorArray)
-    if errorMin<tol:
-        gesture=gestNames[minIndex]
-    if errorMin>=tol:
-        gesture='Unknown'
+def verifyGesture(unknownGesture, dictGesture, keyPoints, gestName, tol):
+    knownGestureData = dictGesture[gestName]
+    knownGesture = getDistancesMatrix(knownGestureData)
+    error = findError(unknownGesture, knownGesture, keyPoints)
+    if error < tol:
+        gesture = gestName
+    if error >= tol:
+        gesture = 'wrong'
     return gesture
 
 
-numGest=int(input('How Many Gestures Do You Want? '))
+numGest = 1
  
-gestNames=[]
+gestNames = []
 knownGestures = []
-trainCnt = 0
-train = True
 tol = 1500
 
 for i in range(0, numGest, 1):
     prompt='Name of Gesture #'+str(i+1)+' '
     name=input(prompt)
     gestNames.append(name)
-print(gestNames)
+correctGesture = gestNames[0]
+print('name of gesture we need to verify:', correctGesture)
 
 
 cap = cv2.VideoCapture(0)
@@ -69,12 +91,14 @@ with mp_hands.Hands(
     min_tracking_confidence=0.5) as hands:
   while cap.isOpened():
     success, image = cap.read()
-    height, width, _ = image.shape
-    # image = cv2.resize(image,(width, height))
+    image = cv2.resize(image,(width, height))
     if not success:
       print("Ignoring empty camera frame.")
       # If loading a video, use 'break' instead of 'continue'.
       continue
+    
+    # draw bounding box
+    image = cv2.rectangle(image, start_point, end_point, (255, 0, 0), 4)
 
     # To improve performance, optionally mark the image as not writeable to
     # pass by reference.
@@ -96,25 +120,15 @@ with mp_hands.Hands(
     for h in Hands:
         for i in allPoints:
             cv2.circle(image, h[i], 5, (255,0,255), 3)
-    if train==True:
-        # Flip the image horizontally for a selfie-view display.
-        image = cv2.flip(image, 1)
-        if Hands != []:
-            print('Please Show Gesture ',gestNames[trainCnt],': Press t when Ready')
-            if cv2.waitKey(1) & 0xff==ord('t'):
-                knownGesture=getDistancesMatrix(Hands[0])
-                knownGestures.append(knownGesture)
-                trainCnt=trainCnt+1
-                if trainCnt==numGest:
-                    train=False
-    if train == False:
-        # Flip the image horizontally for a selfie-view display.
-        image = cv2.flip(image, 1)
-        if Hands != []:
-            unknownGesture=getDistancesMatrix(Hands[0])
-            myGesture=findGesture(unknownGesture,knownGestures,keyPoints,gestNames,tol)
-            #error=findError(knownGesture,unknownGesture,keyPoints)
-            cv2.putText(image,myGesture,(50,100),cv2.FONT_HERSHEY_SIMPLEX,3,(255,0,0),4)
+    
+
+    # Flip the image horizontally for a selfie-view display.
+    image = cv2.flip(image, 1)
+    if Hands != []:
+        unknownGesture = getDistancesMatrix(Hands[0])
+        myGesture = verifyGesture(unknownGesture, gesture_dict, keyPoints, correctGesture, tol)
+        #error=findError(knownGesture,unknownGesture,keyPoints)
+        cv2.putText(image,myGesture, (25,50), cv2.FONT_HERSHEY_SIMPLEX, 3, (255,0,0), 4)
         
     
     cv2.imshow('MediaPipe Hands', image)

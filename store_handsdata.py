@@ -5,6 +5,8 @@ import numpy as np
 # parameters:
 width = 540
 height = 360
+start_point = (120, 40)
+end_point = (420, 320)
 keyPoints = [0,1,4,5,9,13,17,8,12,16,20]
 allPoints = list(range(0, 21))
 
@@ -64,8 +66,6 @@ print(gestNames)
 
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,height)
 with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
@@ -73,11 +73,14 @@ with mp_hands.Hands(
   while cap.isOpened():
     success, image = cap.read()
     # height, width, _ = image.shape
-    # image = cv2.resize(image,(width, height))
+    image = cv2.resize(image,(width, height))
     if not success:
       print("Ignoring empty camera frame.")
       # If loading a video, use 'break' instead of 'continue'.
       continue
+    
+    # draw bounding box
+    image = cv2.rectangle(image, start_point, end_point, (255, 0, 0), 4)
 
     # To improve performance, optionally mark the image as not writeable to
     # pass by reference.
@@ -125,8 +128,8 @@ with mp_hands.Hands(
             unknownGesture=getDistancesMatrix(Hands[0])
             myGesture=findGesture(unknownGesture,knownGestures,keyPoints,gestNames,tol)
             #error=findError(knownGesture,unknownGesture,keyPoints)
-            cv2.putText(image,myGesture,(50,100),cv2.FONT_HERSHEY_SIMPLEX,3,(255,0,0),4)
-        
+            cv2.putText(image,myGesture,(25,50),cv2.FONT_HERSHEY_SIMPLEX,3,(255,0,0),4)
+            
     
     cv2.imshow('MediaPipe Hands', image)
     if cv2.waitKey(5) & 0xFF == 27:
