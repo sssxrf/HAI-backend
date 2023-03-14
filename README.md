@@ -7,9 +7,10 @@
 python -m virtualenv venv
 ```
 
-2. Activate virtual environment (on mac, I am unsure of the command on Windows)
+2. Activate virtual environment 
 ```
-source venv/bin/activate
+Mac: source venv/bin/activate
+Win: call venv/Scripts/activate.bat
 ```
 
 3. Install dependencies
