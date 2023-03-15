@@ -14,8 +14,9 @@ tol = 1500
 
 # stored gestures path
 current_dir = os.path.dirname(os.path.realpath('__file__'))
-rel_path = "gesturedatas\\gesture_info_abcd.txt"
+rel_path = "gesturedatas" + os.sep + "gesture_info_abcd.txt"
 abs_file_path = os.path.join(current_dir, rel_path)
+
 
 # from raw data to handdata format
 def jsonTohanddata(jsonData):
@@ -50,6 +51,7 @@ def readGestInfo():
         else:
             gesture_dict[gesture_name_temp] = gesture_data
     return gesture_dict
+GESTURES_DICT = readGestInfo()
 
 #Euclidean distance matrix functions
 def getDistancesMatrix(handData):
@@ -75,11 +77,13 @@ def verifyGesture(unknownGestureData, dictGesture, keyPoints, gestName, tol):
     knownGestureData = dictGesture[gestName]
     knownGesture = getDistancesMatrix(knownGestureData)
     error = findError(unknownGesture, knownGesture, keyPoints)
-    if error < tol:
-        result = 'correct'
-    if error >= tol:
-        result = 'wrong'
-    return result
+
+    respose = {}
+    accepted = error < tol
+    respose["accepted"] = str(accepted)  # boolean not serializable? how silly!
+    respose["error"] = error
+    respose["tolerance"] = tol
+    return respose
 
 
 # application factory. We will create all of the interfaces here
@@ -88,7 +92,7 @@ def create_app():
     # create and configure the app
     app = Flask(__name__)
     CORS(app)
-    app.config['CORS_HEADERS'] = 'Content-Type'
+    app.config['CORS_HEADERS'] = 'no-cors'
 
     # main route. This is essentially equivalent to the index.html file
     @app.route("/", methods=["GET", "POST"])
@@ -101,18 +105,19 @@ def create_app():
 
         # data sent to the server from the frontend via post method. Let's process it!
         elif request.method == "POST":
-            
+
             # try to get the JSON request data
             try:
                 data = request.get_json()
+
             except:
-                return "Error: No JSON body was able to be decoded by the client!", 400
+                return jsonify("Error: No JSON body was able to be decoded by the client!"), 400
 
             # ~~~ Future AI function call here ~~~
             # ai_result = ai_function(data)
             correctGestName, unknownhanddata = jsonTohanddata(data)
-            gesture_dict = readGestInfo()
-            ai_result = verifyGesture(unknownhanddata, gesture_dict, keyPoints, correctGestName, tol)
+            
+            ai_result = verifyGesture(unknownhanddata, GESTURES_DICT, keyPoints, correctGestName, tol)
 
             return jsonify(ai_result)  # send back the result to the frontend
 
@@ -120,17 +125,15 @@ def create_app():
         else:
             return "Method not allowed", 405
 
-    # This is a simple route to test if the server is working
-    @app.route("/test", methods=["POST"])
-    @cross_origin()
-    def ask():
-        print("Test recieved")
-        try:
-            data = request.get_json()
-            print(data)
-        except:
-            pass
-        return "Success!"
 
     return app
+
+# def jsonTohanddata(jsonData)
+#     HandData = [ ]
+#     for landmark in jsonData["multiHandLandmarks"][0]:
+#         x = landmark["x"]
+#         y = landmark["y"]
+#         z = landmark["z"]
+#         HandData.append((int(x*width),int(y*height))
+#     return gestureName, HandData
 
