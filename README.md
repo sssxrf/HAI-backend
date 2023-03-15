@@ -38,5 +38,5 @@ access, not just those on your localhost).
 
 ### flask server
 1. Ensure that you've sourced the virtual environment
-2. run `FLASK_ENV=development FLASK_APP=server.py flask run --port 5000`. This runs a flask application defined in server.py on the port 5000. You should be able to visit http://localhost:5000 in your web browser if this was successful.
+2. run `FLASK_ENV=development FLASK_APP=server.py flask run --port 5000`. This runs a flask application defined in server.py on the port 5000. You should be able to visit http://localhost:5000 in your web browser if this was successful. (for win run `flask --app server run --debug` )
 3. [optional] expose local server to public-facing address via ngrok. Simply run `ngrok http 5000` in a new terminal to create the tunnel. Documentation for ngrok is here: https://ngrok.com/docs/using-ngrok-with/flask/
