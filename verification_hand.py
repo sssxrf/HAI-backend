@@ -19,7 +19,7 @@ mp_hands = mp.solutions.hands
 gesture_dict = {}
 gesture_data = []
 start_flag = 1
-with open(r'D:/umich_course/2023winter/HCI-AI/Final Project/backend/HAI-backend/gesturedatas/gesture_info_abcd.txt', 'r') as fp_read:
+with open(r'D:\\umich_course\\2023winter\\HCI-AI\\Final Project\\backend\\HAI-backend\\gesturedatas\\gesture_info_abcd.txt', 'r') as fp_read:
     for line in fp_read:
         pos = line[:-1]
         if len(pos) == 1:
