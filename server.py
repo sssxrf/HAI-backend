@@ -14,13 +14,20 @@ tol = 1500
 
 # stored gestures path
 current_dir = os.path.dirname(os.path.realpath('__file__'))
-rel_path = "gesturedatas" + os.sep + "gesture_info_abcd.txt"
+rel_path = "gesturedatas" + os.sep + "gesture_info_alphabet_number_righthand.txt"
 abs_file_path = os.path.join(current_dir, rel_path)
 
 
 # from raw data to handdata format
 def jsonTohanddata(jsonData):
-    gestureName = 'a'
+    name = jsonData["gesture"]
+    if name.isalpha():
+        gestureName = name.lower()
+    elif name.isnumeric():
+        gestureName = name
+    else:
+        print("unexpected gesture name")
+        gestureName = None
     Handdata = []
     # go through landmarks in the first hand
     for landmark in jsonData["multiHandLandmarks"][0]:
@@ -116,7 +123,7 @@ def create_app():
             # ~~~ Future AI function call here ~~~
             # ai_result = ai_function(data)
             correctGestName, unknownhanddata = jsonTohanddata(data)
-            
+            print(correctGestName)
             ai_result = verifyGesture(unknownhanddata, GESTURES_DICT, keyPoints, correctGestName, tol)
 
             return jsonify(ai_result)  # send back the result to the frontend
