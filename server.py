@@ -13,7 +13,7 @@ allPoints = list(range(0, 21))
 tol = 1500
 
 # basically, some gestures were a lot harder to pass than others. This allows variability in acceptance prob
-tolerances_world = {"a": 0.15, "b": 0.20, "f": 0.20}
+tolerances_world = {"a": 0.5, "b": 0.70, "f": 0.5}
 
 # stored gestures path
 current_dir = os.path.dirname(os.path.realpath('__file__'))
@@ -111,14 +111,19 @@ def verifyGestureWorld(unknownGestureData, dictGesture, keyPoints, gestName):
     unknownGesture = np.matrix(unknownGestureData)
     knownGesture = np.matrix(knownGestureData)
 
-    # find euclidean distance between points in the hand (which are rows). Units are in meters.
-    gesture_distance_deltas = knownGesture - unknownGesture
-    gesture_distance_deltas_squared = np.square(gesture_distance_deltas)
-    sums = np.sum(gesture_distance_deltas_squared, axis=1)  # row-wise sum gives us delta from point-to-point
-    euclidean_distance = np.sqrt(sums)
+    unknownGestureDistMatrix = getDistancesMatrix(unknownGestureData)
+    knownGestureDistMatrix = getDistancesMatrix(knownGestureData)
+    total_error = findError(unknownGestureDistMatrix, knownGestureDistMatrix, keyPoints)
+    print(total_error)
 
-    total_error = np.sum(euclidean_distance)
-    average_error = np.sum(euclidean_distance)
+    # find euclidean distance between points in the hand (which are rows). Units are in meters.
+    # gesture_distance_deltas = knownGesture - unknownGesture
+    # gesture_distance_deltas_squared = np.square(gesture_distance_deltas)
+    # sums = np.sum(gesture_distance_deltas_squared, axis=1)  # row-wise sum gives us delta from point-to-point
+    # euclidean_distance = np.sqrt(sums)
+
+    # total_error = np.sum(euclidean_distance)
+    # average_error = np.sum(euclidean_distance)
 
     tolerance = tolerances_world[gestName]
 
@@ -126,7 +131,7 @@ def verifyGestureWorld(unknownGestureData, dictGesture, keyPoints, gestName):
     accepted = total_error < tolerance
     response["accepted"] = str(accepted)  # boolean not serializable? how silly!
     response["error"] = total_error
-    response["error_avg"] = average_error
+    # response["error_avg"] = average_error
     response["tolerance"] = tolerance
 
     return response
