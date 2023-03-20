@@ -15,3 +15,6 @@ ngrok
 
 # python garbage
 __pycache__/
+
+# pycharm
+.idea/

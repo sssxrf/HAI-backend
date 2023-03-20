@@ -57,6 +57,7 @@ trainCnt = 0
 train = True
 tol = 1500
 stored_handsdata = []
+stored_handsdata_world = []
 
 for i in range(0, numGest, 1):
     prompt='Name of Gesture #'+str(i+1)+' '
@@ -92,12 +93,22 @@ with mp_hands.Hands(
     image.flags.writeable = True
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     Hands=[]
+    HandsWorldCoords = []
     if results.multi_hand_landmarks:
       for hand_landmarks in results.multi_hand_landmarks:
         Hand=[]
         for landMark in hand_landmarks.landmark:
               Hand.append((int(landMark.x*width),int(landMark.y*height)))
         Hands.append(Hand)
+
+      for hand_landmark_world in results.multi_hand_world_landmarks:
+        HandWorld = []
+        for landMark in hand_landmark_world.landmark:
+          HandWorld.append((landMark.x, landMark.y, landMark.z))
+        HandsWorldCoords.append(HandWorld)
+
+
+
 
     for h in Hands:
         for i in allPoints:
@@ -111,16 +122,31 @@ with mp_hands.Hands(
                 stored_handsdata.append(Hands[0])
                 knownGesture=getDistancesMatrix(Hands[0])
                 knownGestures.append(knownGesture)
+
+                stored_handsdata_world.append(HandsWorldCoords[0])
+
                 trainCnt=trainCnt+1
                 if trainCnt==numGest:
-                    with open(r'D:/umich_course/2023winter/HCI-AI/Final Project\backend/HAI-backend/gesturedatas/gesture_info.txt', 'w') as fp:
+                    with open(r'gesturedatas/gesture_info.txt', 'w') as fp:
                         for index in range(numGest):
                             fp.write("%s\n" % gestNames[index])
                             fp.write('\n'.join('%s %s' % x for x in stored_handsdata[index]))
                             fp.write("\n")
+
+                    # write world coordinates
+                    with open(r'gesturedatas_world_coordinates/gesture_info.txt', 'w') as fp:
+                        for index in range(numGest):
+                            fp.write("%s\n" % gestNames[index])
+                            fp.write('\n'.join(f'{x[0]} {x[1]} {x[2]}' for x in stored_handsdata_world[index]))
+                            fp.write("\n")
                         
                         print('Gesture storage Done')
                     train=False
+
+
+
+
+
     if train == False:
         # Flip the image horizontally for a selfie-view display.
         image = cv2.flip(image, 1)

@@ -12,10 +12,15 @@ keyPoints = [0,1,4,5,9,13,17,8,12,16,20]
 allPoints = list(range(0, 21))
 tol = 1500
 
+# basically, some gestures were a lot harder to pass than others. This allows variability in acceptance prob
+tolerances_world = {"a": 0.15, "b": 0.20, "f": 0.20}
+
 # stored gestures path
 current_dir = os.path.dirname(os.path.realpath('__file__'))
 rel_path = "gesturedatas" + os.sep + "gesture_info_alphabet_number_righthand.txt"
 abs_file_path = os.path.join(current_dir, rel_path)
+rel_path_world = "gesturedatas_world_coordinates" + os.sep + "gesture_info_alphabet_number_righthand.txt"
+abs_file_path_world = os.path.join(current_dir, rel_path_world)
 
 
 # from raw data to handdata format
@@ -32,14 +37,21 @@ def jsonTohanddata(jsonData):
     # go through landmarks in the first hand
     for landmark in jsonData["multiHandLandmarks"][0]:
         Handdata.append((int(landmark["x"]*width),int(landmark["y"]*height)))
-    return gestureName, Handdata
+
+    Handdata_world = []
+    # go through landmarks, but save the world coordinate data
+    for landmark in jsonData["multiHandWorldLandmarks"][0]:
+        Handdata_world.append((float(landmark["x"]), float(landmark["y"]), float(landmark["z"])))
+        pass
+
+    return gestureName, Handdata, Handdata_world
 
 # read stored gesture info from file
-def readGestInfo():
+def readGestInfo(filepath):
     gesture_dict = {}
     gesture_data = []
     start_flag = 1
-    with open(abs_file_path, 'r') as fp_read:
+    with open(filepath, 'r') as fp_read:
         for line in fp_read:
             pos = line[:-1]
             if len(pos) == 1:
@@ -52,13 +64,14 @@ def readGestInfo():
                 gesture_data = []
                 continue
             
-            pos_tuple = tuple(map(int, pos.split(' ')))
+            pos_tuple = tuple(map(float, pos.split(' ')))
             gesture_data.append(pos_tuple)
 
         else:
             gesture_dict[gesture_name_temp] = gesture_data
     return gesture_dict
-GESTURES_DICT = readGestInfo()
+GESTURES_DICT = readGestInfo(abs_file_path)
+GESTURES_DICT_WORLD = readGestInfo(abs_file_path_world)
 
 #Euclidean distance matrix functions
 def getDistancesMatrix(handData):
@@ -85,12 +98,38 @@ def verifyGesture(unknownGestureData, dictGesture, keyPoints, gestName, tol):
     knownGesture = getDistancesMatrix(knownGestureData)
     error = findError(unknownGesture, knownGesture, keyPoints)
 
-    respose = {}
+    response = {}
     accepted = error < tol
-    respose["accepted"] = str(accepted)  # boolean not serializable? how silly!
-    respose["error"] = error
-    respose["tolerance"] = tol
-    return respose
+    response["accepted"] = str(accepted)  # boolean not serializable? how silly!
+    response["error"] = error
+    response["tolerance"] = tol
+    return response
+
+
+def verifyGestureWorld(unknownGestureData, dictGesture, keyPoints, gestName):
+    knownGestureData = dictGesture[gestName]
+    unknownGesture = np.matrix(unknownGestureData)
+    knownGesture = np.matrix(knownGestureData)
+
+    # find euclidean distance between points in the hand (which are rows). Units are in meters.
+    gesture_distance_deltas = knownGesture - unknownGesture
+    gesture_distance_deltas_squared = np.square(gesture_distance_deltas)
+    sums = np.sum(gesture_distance_deltas_squared, axis=1)  # row-wise sum gives us delta from point-to-point
+    euclidean_distance = np.sqrt(sums)
+
+    total_error = np.sum(euclidean_distance)
+    average_error = np.sum(euclidean_distance)
+
+    tolerance = tolerances_world[gestName]
+
+    response = {}
+    accepted = total_error < tolerance
+    response["accepted"] = str(accepted)  # boolean not serializable? how silly!
+    response["error"] = total_error
+    response["error_avg"] = average_error
+    response["tolerance"] = tolerance
+
+    return response
 
 
 # application factory. We will create all of the interfaces here
@@ -122,11 +161,11 @@ def create_app():
 
             # ~~~ Future AI function call here ~~~
             # ai_result = ai_function(data)
-            correctGestName, unknownhanddata = jsonTohanddata(data)
-            print(correctGestName)
+            correctGestName, unknownhanddata, unknownhanddata_world = jsonTohanddata(data)
             ai_result = verifyGesture(unknownhanddata, GESTURES_DICT, keyPoints, correctGestName, tol)
+            ai_result_world = verifyGestureWorld(unknownhanddata_world, GESTURES_DICT_WORLD, keyPoints, correctGestName)
 
-            return jsonify(ai_result)  # send back the result to the frontend
+            return jsonify(ai_result_world)  # send back the result to the frontend
 
         # neither get nor post
         else:
