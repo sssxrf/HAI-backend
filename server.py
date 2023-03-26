@@ -108,7 +108,7 @@ def getJointsAngles(fingerdata):
     angle1 = getAbsoluteAngle(fingerdata[0], fingerdata[2], fingerdata[1])
     angle2 = getAbsoluteAngle(fingerdata[1], fingerdata[3], fingerdata[2])
     angle3 = getAbsoluteAngle(fingerdata[2], fingerdata[4], fingerdata[3])
-    print([angle1, angle2, angle3])
+    # print([angle1, angle2, angle3])
     return np.array([angle1, angle2, angle3])
  
 def findError(gestureMatrix, unknownMatrix, keyPoints):
@@ -143,17 +143,15 @@ def verifyGestureWorld(unknownGestureData, dictGesture, keyPoints, gestName):
     total_error = findError(unknownGestureDistMatrix, knownGestureDistMatrix, keyPoints)
 
     # calculate dist matrix for all landmarks in thumb
-    unknownFingerData = getFingerdata(unknownGestureData, thumbPoints)
-    knownFingerData = getFingerdata(knownGestureData, thumbPoints)
-    unknownFingerDistMatrix = getDistancesMatrix(unknownFingerData)
-    knownFingerDistMatrix = getDistancesMatrix(knownFingerData)
-    thumb_error = findError(unknownFingerDistMatrix, knownFingerDistMatrix, thumbPoints)
+    thumb_error = findError(unknownGestureDistMatrix, knownGestureDistMatrix, thumbPoints)
 
     # calculate the anlges of joint of thumb
+    unknownFingerData = getFingerdata(unknownGestureData, thumbPoints)
+    knownFingerData = getFingerdata(knownGestureData, thumbPoints)
     unknownFingerAngle = getJointsAngles(unknownFingerData)
     knownFingerAngle = getJointsAngles(knownFingerData)
     thumb_error_angle = np.max(np.abs(unknownFingerAngle - knownFingerAngle))
-    print(thumb_error_angle)
+    # print(thumb_error_angle)
 
 
     # find euclidean distance between points in the hand (which are rows). Units are in meters.
