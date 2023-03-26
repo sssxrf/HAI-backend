@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+from math import atan2
 
 from flask import Flask, redirect, url_for, request, jsonify
 from flask_cors import CORS, cross_origin
@@ -10,10 +11,13 @@ width = 540
 height = 360
 keyPoints = [0,1,4,5,9,13,17,8,12,16,20]
 allPoints = list(range(0, 21))
+thumbPoints = [0,1,2,3,4]
 tol = 1500
 
 # basically, some gestures were a lot harder to pass than others. This allows variability in acceptance prob
-tolerances_world = {"a": 0.5, "b": 0.70, "f": 0.5}
+# fingers tolerance
+tolerances_world = {"a": 0.6, "b": 0.70, "f": 0.5}
+tolerances_world_fingers = {"a":[0.08,0.1,0.1,0.1,0.1], "b":[0.17,0.1,0.1,0.1,0.1], "f":[0.1,0.1,0.1,0.1,0.1]}
 
 # stored gestures path
 current_dir = os.path.dirname(os.path.realpath('__file__'))
@@ -83,6 +87,29 @@ def getDistancesMatrix(handData):
     distMatrix = np.linalg.norm(handmatrix - handmatrixT, axis = 2)
 
     return distMatrix
+
+def getFingerdata(handData, fingerPoints):
+    fingerdata = [handData[i] for i in fingerPoints]
+    return fingerdata
+
+def getAbsoluteAngle(point1, point2, fixedpoint):
+    point1_ar = np.asarray(point1)
+    point2_ar = np.asarray(point2)
+    fixedpoint_ar = np.asarray(fixedpoint)
+    line1 = point1_ar - fixedpoint_ar
+    line2 = point2_ar - fixedpoint_ar
+
+    cosine_angle = np.dot(line1, line2) / (np.linalg.norm(line1) * np.linalg.norm(line2))
+    angle = np.arccos(cosine_angle)
+    return angle
+
+def getJointsAngles(fingerdata):
+    # calculate angles in terms of the fixed point(the joint angle we need)
+    angle1 = getAbsoluteAngle(fingerdata[0], fingerdata[2], fingerdata[1])
+    angle2 = getAbsoluteAngle(fingerdata[1], fingerdata[3], fingerdata[2])
+    angle3 = getAbsoluteAngle(fingerdata[2], fingerdata[4], fingerdata[3])
+    print([angle1, angle2, angle3])
+    return np.array([angle1, angle2, angle3])
  
 def findError(gestureMatrix, unknownMatrix, keyPoints):
     error=0
@@ -114,7 +141,20 @@ def verifyGestureWorld(unknownGestureData, dictGesture, keyPoints, gestName):
     unknownGestureDistMatrix = getDistancesMatrix(unknownGestureData)
     knownGestureDistMatrix = getDistancesMatrix(knownGestureData)
     total_error = findError(unknownGestureDistMatrix, knownGestureDistMatrix, keyPoints)
-    print(total_error)
+
+    # calculate dist matrix for all landmarks in thumb
+    unknownFingerData = getFingerdata(unknownGestureData, thumbPoints)
+    knownFingerData = getFingerdata(knownGestureData, thumbPoints)
+    unknownFingerDistMatrix = getDistancesMatrix(unknownFingerData)
+    knownFingerDistMatrix = getDistancesMatrix(knownFingerData)
+    thumb_error = findError(unknownFingerDistMatrix, knownFingerDistMatrix, thumbPoints)
+
+    # calculate the anlges of joint of thumb
+    unknownFingerAngle = getJointsAngles(unknownFingerData)
+    knownFingerAngle = getJointsAngles(knownFingerData)
+    thumb_error_angle = np.max(np.abs(unknownFingerAngle - knownFingerAngle))
+    print(thumb_error_angle)
+
 
     # find euclidean distance between points in the hand (which are rows). Units are in meters.
     # gesture_distance_deltas = knownGesture - unknownGesture
@@ -126,6 +166,7 @@ def verifyGestureWorld(unknownGestureData, dictGesture, keyPoints, gestName):
     # average_error = np.sum(euclidean_distance)
 
     tolerance = tolerances_world[gestName]
+    tolerance_fingers = tolerances_world_fingers[gestName][0]
 
     response = {}
     accepted = total_error < tolerance
