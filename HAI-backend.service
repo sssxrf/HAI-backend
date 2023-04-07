@@ -1,0 +1,13 @@
+[Unit]
+Description=Human AI Interaction backend project service file
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/home/biff/Repositories/HAI-backend/start.sh
+
+[Install]
+WantedBy=multi-user.target
