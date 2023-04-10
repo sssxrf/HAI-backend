@@ -6,6 +6,8 @@ from math import atan2
 from flask import Flask, redirect, url_for, request, jsonify
 from flask_cors import CORS, cross_origin
 
+from waitress import serve
+
 # global parameters
 width = 540
 height = 360
@@ -239,6 +241,10 @@ def create_app():
             return "Method not allowed", 405
 
     return app
+
+if __name__ == "__main__":
+    app = create_app()
+    serve(app, host='0.0.0.0', port='5000', url_scheme='https')
 
 # def jsonTohanddata(jsonData)
 #     HandData = [ ]
