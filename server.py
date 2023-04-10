@@ -258,7 +258,7 @@ def create_app():
             data = request.get_json()
 
         except:
-            return jsonify("Error: No JSON body was able to be decoded by the client!"), 400
+            return jsonify("Error: No JSON body was able to be decoded by the client! BUT! At least the server works! 🎉")
 
         # if it was a test message, return a success message
         if data.get("test"):
