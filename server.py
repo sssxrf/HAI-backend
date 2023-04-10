@@ -226,6 +226,10 @@ def create_app():
             except:
                 return jsonify("Error: No JSON body was able to be decoded by the client!"), 400
 
+            # if it was a test message, return a success message
+            if data.get("test"):
+                return jsonify("Success! 🎉")
+
             # ~~~ Future AI function call here ~~~
             # ai_result = ai_function(data)
             correctGestName, unknownhanddata, unknownhanddata_world = jsonTohanddata(
@@ -241,8 +245,38 @@ def create_app():
         # neither get nor post
         else:
             return "Method not allowed", 405
+        
+
+    @app.route("/hand", methods=["GET"])
+    @cross_origin()
+    def hand_request():
+
+        # try to get the JSON request data
+        try:
+            data = request.get_json()
+
+        except:
+            return jsonify("Error: No JSON body was able to be decoded by the client!"), 400
+
+        # if it was a test message, return a success message
+        if data.get("test"):
+            return jsonify("Success! 🎉")
+
+        # ~~~ Future AI function call here ~~~
+        # ai_result = ai_function(data)
+        correctGestName, unknownhanddata, unknownhanddata_world = jsonTohanddata(
+            data)
+        # ai_result = verifyGesture(
+        #     unknownhanddata, GESTURES_DICT, keyPoints, correctGestName, tol)
+        ai_result_world = verifyGestureWorld(
+            unknownhanddata_world, GESTURES_DICT_WORLD, keyPoints, correctGestName)
+
+        # send back the result to the frontend
+        return jsonify(ai_result_world)
 
     return app
+
+    
 
 # def jsonTohanddata(jsonData)
 #     HandData = [ ]
