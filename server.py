@@ -241,6 +241,9 @@ def create_app():
             ai_result_world = verifyGestureWorld(
                 unknownhanddata_world, GESTURES_DICT_WORLD, keyPoints, correctGestName)
 
+            # add back the correct gesture name
+            ai_result_world['gesture'] = correctGestName;
+
             # send back the result to the frontend
             return jsonify(ai_result_world)
 
@@ -272,6 +275,9 @@ def create_app():
         #     unknownhanddata, GESTURES_DICT, keyPoints, correctGestName, tol)
         ai_result_world = verifyGestureWorld(
             unknownhanddata_world, GESTURES_DICT_WORLD, keyPoints, correctGestName)
+
+        # add back the correct gesture name
+        ai_result_world['gesture'] = correctGestName;
 
         # send back the result to the frontend
         return jsonify(ai_result_world)
