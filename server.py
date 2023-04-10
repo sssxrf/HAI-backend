@@ -21,6 +21,10 @@ tolerances_world = {'a': 0.6, 'b': 0.55, 'c': 0.8, 'd': 0.40, 'e': 0.5, 'f': 0.5
 tolerances_world_fingers = {"a": [0.08, 0.1, 0.1, 0.1, 0.1], "b": [
     0.17, 0.1, 0.1, 0.1, 0.1], "f": [0.1, 0.1, 0.1, 0.1, 0.1]}
 
+# to avoid a poor user experience for the test day, add a tolerance for every gesture
+for gesture, tolerance in tolerances_world.items():
+    tolerances_world[gesture] = tolerance + 0.1
+
 # stored gestures path
 current_dir = os.path.dirname(os.path.realpath('__file__'))
 rel_path = "gesturedatas" + os.sep + "gesture_info_alphabet_number_righthand.txt"

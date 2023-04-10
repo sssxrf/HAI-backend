@@ -44,4 +44,4 @@ access, not just those on your localhost).
 
 ### production server
 
-To run the production server, instead of running the flask command, we run a [Waitress](https://pypi.org/project/waitress/) server. By simply running the command `waitress-serve --call 'server:create_app'`, we tell waitress to call the `create_app` function in `server.py` file. By default, the host is 0.0.0.0 and port is 8080.
+To run the production server, instead of running the flask command, we run a [Waitress](https://pypi.org/project/waitress/) server. By simply running the command `waitress-serve --call server:create_app`, we tell waitress to call the `create_app` function in `server.py` file. By default, the host is 0.0.0.0 and port is 8080.
